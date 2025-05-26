@@ -8,12 +8,11 @@ dotenv.config();
 
 const resend = new Resend(process.env.RESEND_KEY);
 
-// Defining  the Worker
 const emailWorker = new Worker(
   "emailQueue",
   async (job) => {
-    const { users, preferred_time } = job.data;
-    console.log(`Processing job for users at ${preferred_time}`);
+    const { name, email } = job.data;
+    console.log(`Processing daily email for ${email}`);
 
     const problem = await fetchDailyProblem();
     if (!problem) {
@@ -23,25 +22,25 @@ const emailWorker = new Worker(
 
     const { title, url, difficulty } = problem;
 
-    const batchEmails = users.map((user) => ({
+    const emailData = {
       from: "Daily LeetCode <onboarding@resend.dev>",
-      to: [user.email],
+      to: [email],
       subject: `Daily LeetCode Problem: ${title}`,
-      html: `<p>Hi ${user.name},</p>
-            <p>Today's LeetCode problem is <strong>${title}</strong> with a difficulty of <strong>${difficulty}</strong>.</p>
-            <p>You can solve it <a href="${url}">here</a>.</p>
-            <p>Happy coding!</p>`,
-    }));
+      html: `<p>Hi ${name},</p>
+             <p>Today's LeetCode problem is <strong>${title}</strong> with a difficulty of <strong>${difficulty}</strong>.</p>
+             <p>You can solve it <a href="${url}">here</a>.</p>
+             <p>Happy coding!</p>`,
+    };
 
     try {
-      await resend.batch.send(batchEmails);
-      console.log(`Emails sent successfully to ${users.length} users`);
+      await resend.emails.send(emailData);
+      console.log(`Email sent successfully to ${email}`);
     } catch (error) {
-      console.error("Error sending emails:", error);
+      console.error(`Error sending email to ${email}:`, error);
     }
   },
   {
-    connection: redisConnection, 
+    connection: redisConnection,
   }
 );
 
