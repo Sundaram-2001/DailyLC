@@ -44,7 +44,6 @@ const emailWorker = new Worker(
   }
 );
 
-// Optional event handlers
 emailWorker.on("completed", (job) => {
   console.log(`Job with ID ${job.id} completed successfully`);
 });
