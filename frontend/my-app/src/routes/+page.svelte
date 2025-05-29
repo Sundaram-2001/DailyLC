@@ -9,7 +9,7 @@
     const data = { name, email ,time};
     console.log("Sending data:", data);
 
-    const result = await fetch('http://localhost:3000/data', {
+    const result = await fetch(`${import.meta.env.VITE_API_URL}/data`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
