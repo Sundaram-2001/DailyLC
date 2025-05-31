@@ -1,9 +1,3 @@
-import express from "express";
-import addData from "../db.js";
-import scheduleUsers from "../scheduler.js";
-
-const routes = express.Router();
-
 routes.post("/", async (req, res) => {
   const { name, email, time } = req.body;
 
@@ -12,11 +6,13 @@ routes.post("/", async (req, res) => {
     return res.status(500).json({ message: "Insert failed", error: result.error });
   }
 
-  const scheduler = await scheduleUsers({ name, email, preferred_time: time });
-  if (!scheduler.success) {
-    return res.status(500).json({ message: "Error scheduling job", error: scheduler.error });
-  }
+  // ✅ Respond early
+  res.status(200).json({ message: "User added successfully! Job will be scheduled shortly." });
 
-  return res.status(200).json({ message: "User added and job scheduled successfully!" });
+  // Do scheduling in background (no await)
+  scheduleUsers({ name, email, preferred_time: time })
+    .then(res => {
+      if (!res.success) console.error("Scheduler error:", res.error);
+    })
+    .catch(err => console.error("Unexpected scheduler error:", err));
 });
-export default routes
