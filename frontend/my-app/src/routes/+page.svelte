@@ -1,101 +1,127 @@
 <script>
+  const TIMEOUT_MS = 7000; // 7 seconds timeout
+
+  // @ts-ignore
+  function timeoutPromise(promise, ms) {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error("Request timed out")), ms);
+      promise
+        // @ts-ignore
+        .then(res => {
+          clearTimeout(timer);
+          resolve(res);
+        })
+        // @ts-ignore
+        .catch(err => {
+          clearTimeout(timer);
+          reject(err);
+        });
+    });
+  }
+
   let name = '';
   let email = '';
-  let time=''
+  let time = '';
+  let loading = false;
+
   // @ts-ignore
   const handleSubmit = async (event) => {
     event.preventDefault();
+    loading = true;
 
-    const data = { name, email ,time};
+    const data = { name, email, time };
     console.log("Sending data:", data);
 
-    const result = await fetch(`${import.meta.env.VITE_API_URL}/data`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+    try {
+      const response = await timeoutPromise(
+        fetch("http://localhost:3000/data", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        }),
+        TIMEOUT_MS
+      );
 
-    const res = await result.json();
-    alert(res.message);
+      const res = await response.json();
+      alert(res.message);
+
+      // Optional: clear form inputs after success
+      if (res.message.toLowerCase().includes("success")) {
+        name = '';
+        email = '';
+        time = '';
+      }
+    } catch (err) {
+      // @ts-ignore
+      if (err.message === "Request timed out") {
+        alert("Server took too long to respond. Please try again later.");
+      } else {
+        alert("Something went wrong. Please try again.");
+      }
+    } finally {
+      loading = false;
+    }
   };
 </script>
 
+<main>
+  <form on:submit|preventDefault={handleSubmit}>
+    <label>
+      Name:
+      <input
+        type="text"
+        bind:value={name}
+        placeholder="Your name"
+        required
+      />
+    </label>
+
+    <label>
+      Email:
+      <input
+        type="email"
+        bind:value={email}
+        placeholder="Your email"
+        required
+      />
+    </label>
+
+    <label>
+      Preferred Time:
+      <input
+        type="time"
+        bind:value={time}
+        required
+      />
+    </label>
+
+    <button type="submit" disabled={loading}>
+      {#if loading}
+        Submitting...
+      {:else}
+        Submit
+      {/if}
+    </button>
+  </form>
+</main>
+
 <style>
   main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    font-family: sans-serif;
-    background-color: #f7f7f7;
+    max-width: 400px;
+    margin: 2rem auto;
+    font-family: system-ui, sans-serif;
   }
-
-  h1 {
-    margin-bottom: 2rem;
-    font-size: 2.5rem;
-    color: #333;
-  }
-
-  form {
-    background: white;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    width: 300px;
-  }
-
   label {
     display: block;
     margin-bottom: 1rem;
-    font-weight: 500;
-    color: #555;
   }
-
-  input {
+  input, button {
     width: 100%;
     padding: 0.5rem;
     margin-top: 0.25rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
   }
-
-  button {
-    margin-top: 1rem;
-    padding: 0.75rem;
-    width: 100%;
-    background-color: #0070f3;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    cursor: pointer;
-  }
-
-  button:hover {
-    background-color: #005fd0;
+  button[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 </style>
-
-<main>
-  <h1>DailyLC</h1>
-  <form on:submit={handleSubmit}>
-    <label>
-      Your name:
-      <input type="text" bind:value={name} required />
-    </label>
-    <label>
-      Your email:
-      <input type="email" bind:value={email} required />
-    </label>
-    <label>
-      Preferred Time:
-      <input type="time" bind:value={time} required />
-        <small style="color: red; font-size: 0.8rem;">Please enter time in 24-hour format (HH:MM)</small>
-    </label>
-    <button type="submit">Send</button>
-  </form>
-</main>
