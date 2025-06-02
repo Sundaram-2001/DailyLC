@@ -35,7 +35,7 @@
 
     try {
       const response = await timeoutPromise(
-        fetch(`${API_URL}`, {
+        fetch(`${API_URL}/data`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
