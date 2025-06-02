@@ -1,5 +1,6 @@
 <script>
-  const TIMEOUT_MS = 7000; // 7 seconds timeout
+  const TIMEOUT_MS = 7000;
+  const API_URL = import.meta.env.VITE_API_URL 
 
   // @ts-ignore
   function timeoutPromise(promise, ms) {
@@ -34,7 +35,7 @@
 
     try {
       const response = await timeoutPromise(
-        fetch("http://localhost:3000/data", {
+        fetch(`${API_URL}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
