@@ -16,7 +16,7 @@ No distractions, just one daily challenge to help you build consistency in your 
 - 📈 Includes difficulty and acceptance rate
 - ⚙️ Simple subscription through frontend form
 - 🔒 Stored securely with Supabase SQL
-- 🐳 Deployed with Docker for portability
+- 🐳 Deployed with Docker for portability (to be completed)
 
 ---
 
